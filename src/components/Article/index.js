@@ -5,6 +5,7 @@ import agent from '../../agent';
 import { connect } from 'react-redux';
 import marked from 'marked';
 import { ARTICLE_PAGE_LOADED, ARTICLE_PAGE_UNLOADED } from '../../constants/actionTypes';
+import { createReactPolicy } from '../../trustedtypes';
 
 const mapStateToProps = state => ({
   ...state.article,
@@ -16,6 +17,10 @@ const mapDispatchToProps = dispatch => ({
     dispatch({ type: ARTICLE_PAGE_LOADED, payload }),
   onUnload: () =>
     dispatch({ type: ARTICLE_PAGE_UNLOADED })
+});
+
+const markedSanitizedPolicy = createReactPolicy('article-markup', {
+      createHTML: (s) => marked(s, { sanitize: true }),
 });
 
 class Article extends React.Component {
@@ -35,7 +40,7 @@ class Article extends React.Component {
       return null;
     }
 
-    const markup = { __html: marked(this.props.article.body, { sanitize: true }) };
+    const markup = { __html: markedSanitizedPolicy.createHTML(this.props.article.body) };
     const canModify = this.props.currentUser &&
       this.props.currentUser.username === this.props.article.author.username;
     return (
